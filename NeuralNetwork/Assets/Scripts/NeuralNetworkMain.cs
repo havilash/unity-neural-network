@@ -11,8 +11,8 @@ public class NeuralNetworkMain : MonoBehaviour
 
     DataPoint[] data = new DataPoint[]
     {
-        new DataPoint(new double[] { 1.0 }, new double[] { 1.0 }),
-        new DataPoint(new double[] { 0.0 }, new double[] { 0.0 }),
+        new DataPoint(new double[] { 0.0 }, new double[] { 1.0 }),
+        new DataPoint(new double[] { 1.0 }, new double[] { 0.0 }),
 
         //new DataPoint(new double[] { 1.0, 0.0 }, new double[] { 1.0, 0.0 }),
         //new DataPoint(new double[] { 0.0, 1.0 }, new double[] { 0.0, 1.0 }),
@@ -47,54 +47,13 @@ public class NeuralNetworkMain : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
-
-        print(String.Join(" | ", neuralNetwork.CalculateOutputs(data[0].inputs)));
-        print(String.Join(" | ", neuralNetwork.CalculateOutputs(data[1].inputs)));
-
-        print("");
-        print("");
-
-        for (int i = 1; i < 20; i++)
+        
+        for (int i = 0; i < 1000; i++)
         {
-            foreach (DataPoint dataPoint in data)
-            {
-                neuralNetwork.UpdateAllGradients(dataPoint);
-            }
-            double[,] gradientW = neuralNetwork.layers[0].costGradientW;
-            double[] gradientB = neuralNetwork.layers[0].costGradientB;
-
-            //print("weight: " + neuralNetwork.layers[0].weights[0, 0].ToString() + " | " + neuralNetwork.layers[0].weights[0, 1].ToString());
-            //print("weigth: " + neuralNetwork.layers[0].weights[1, 0].ToString() + " | " + neuralNetwork.layers[0].weights[1, 1].ToString());
-            //print("gradient: " + gradient[0, 0].ToString() + " | " + gradient[0, 1].ToString());
-            //print("gradient: " + gradient[1, 0].ToString() + " | " + gradient[1, 1].ToString());
-
-            print("weigth: " + neuralNetwork.layers[0].weights[0, 0].ToString() + " | bias: " + neuralNetwork.layers[0].biases[0].ToString());
-            print("gradientW: " + gradientW[0, 0].ToString() + " | gradientB: " + gradientW[0, 0].ToString());
-
-            neuralNetwork.ClearAllGradients();
-
             neuralNetwork.Learn(data, .3);
-
-            print("");
         }
-
-
-
-        print("");
-
-        print(String.Join(" | ", neuralNetwork.CalculateOutputs(data[0].inputs)));
-        print(String.Join(" | ", neuralNetwork.CalculateOutputs(data[1].inputs)));
-
-        //for (int i = 1; i < 500; i++)
-        //{
-        //    neuralNetwork.Learn(data, 0.5);
-        //    print(String.Join(", ", neuralNetwork.CalculateOutputs(data[0].inputs)));
-        //}
-
-        //print("");
-        //print(String.Join(", ", neuralNetwork.CalculateOutputs(new double[] { 1, 0 })));
-        //print(String.Join(", ", neuralNetwork.CalculateOutputs(new double[] { 0, 1 })));
+        print(String.Join("|", neuralNetwork.CalculateOutputs(data[0].inputs)));
+        print(String.Join("|", neuralNetwork.CalculateOutputs(data[1].inputs)));
     }
 
     void DrawNeuralNetwork()

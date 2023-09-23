@@ -40,7 +40,7 @@ public class Layer
             biases[nodeOut] -= costGradientB[nodeOut] * learnRate;
             for (int nodeIn = 0; nodeIn < numNodesIn; nodeIn++)
             {
-                weights[nodeIn, nodeOut] = costGradientW[nodeIn, nodeOut] * learnRate;
+                weights[nodeIn, nodeOut] -= costGradientW[nodeIn, nodeOut] * learnRate;
             }
         }
     }
@@ -51,7 +51,7 @@ public class Layer
         Array.Clear(costGradientB, 0, costGradientB.Length);
     }
 
-public double[] CalculateOutputs(double[] inputs)
+    public double[] CalculateOutputs(double[] inputs)
     {
         this.inputs = inputs;
         weightedInputs = new double[numNodesOut];
