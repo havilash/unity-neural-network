@@ -1,89 +1,57 @@
+using Assets.Scripts.DataHandling;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Transactions;
 using UnityEngine;
 
-
 public class NeuralNetworkMain : MonoBehaviour
 {
-    NeuralNetwork neuralNetwork = new NeuralNetwork(1, 1);
+    NeuralNetwork neuralNetwork = new(2, 8, 2);
+    [SerializeField] private Graph graph;
 
-    DataPoint[] data = new DataPoint[]
-    {
-        new DataPoint(new double[] { 0.0 }, new double[] { 1.0 }),
-        new DataPoint(new double[] { 1.0 }, new double[] { 0.0 }),
+    DataPoint[] data;
 
-        //new DataPoint(new double[] { 1.0, 0.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 0.0, 1.0 }, new double[] { 0.0, 1.0 }),
+    int i = 0;
 
-        //new DataPoint(new double[] { 5.0, 13.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 7.0, 8.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 2.0, 6.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 8.0, 3.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 3.0, 10.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 6.0, 7.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 1.0, 5.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 7.0, 2.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 4.0, 9.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 5.0, 6.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 0.0, 4.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 6.0, 1.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 3.0, 8.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 4.0, 5.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 5.0, 2.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 1.0, 7.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 2.0, 3.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 6.0, 0.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 3.0, 6.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 4.0, 1.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 5.0, 5.0 }, new double[] { 1.0, 0.0 }),
-        //new DataPoint(new double[] { 0.0, 2.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 1.0, 6.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 2.0, 1.0 }, new double[] { 0.0, 1.0 }),
-        //new DataPoint(new double[] { 6.0, 5.0 }, new double[] { 1.0, 0.0 }),
-    };
-
-    // Start is called before the first frame update
     void Start()
     {
-        
-        for (int i = 0; i < 1000; i++)
+        List<Dictionary<string, string>> rawData = DataLoader.ReadCSV("Assets\\Data\\Fruit\\Fruit_Dataset.csv");
+        data = new DataPoint[rawData.Count];
+
+        for (int i = 0; i < data.Length; i++)
         {
-            neuralNetwork.Learn(data, .3);
+            double[] inputs = { Convert.ToDouble(rawData[i]["spike_length"])/10, Convert.ToDouble(rawData[i]["size"])/1000 };
+            double[] expectedOutputs = DataPoint.CreateOneHot(Convert.ToInt16(rawData[i]["is_poisonous"]), 2);
+            DataPoint datapoint = new(inputs, expectedOutputs);
+            data[i] = datapoint;
         }
-        print(String.Join("|", neuralNetwork.CalculateOutputs(data[0].inputs)));
-        print(String.Join("|", neuralNetwork.CalculateOutputs(data[1].inputs)));
+
+        GraphPoint[] graphData = new GraphPoint[data.Length];
+
+        for (int i = 0; i < data.Length; i++)
+        {
+            DataPoint dp = data[i];
+            Vector2 point = new Vector2((float)dp.inputs[0], (float)dp.inputs[1]);
+            bool color = dp.expectedOutputs[0] == 1;
+            graphData[i] = new GraphPoint(point, color);
+        }
+
+        graph.Draw(graphData);
     }
 
-    void DrawNeuralNetwork()
+    void Update()
     {
-        neuralNetwork.layers[0].weights[0, 0] = 0;
-
-        double start = 0;
-        double range = 10;
-        int resolution = 30;
-        for (int i = 1; i < resolution; i++)
+        if (i < 10)
         {
-            neuralNetwork.layers[0].weights[0, 0] = i/30 * range + start;
-
-            foreach (DataPoint dataPoint in data)
-            {
-                neuralNetwork.UpdateAllGradients(dataPoint);
-            }
-            double[,] gradient = neuralNetwork.layers[0].costGradientW;
-
-
-
-            DrawPoint(new Vector3((float)gradient[0, 0], (float)neuralNetwork.layers[0].weights[0, 0], 0), Color.green);
-
-            neuralNetwork.ClearAllGradients();
+            neuralNetwork.Learn(data, 0.3);
+            i++;
         }
-        
-    }
-
-    private void DrawPoint(Vector3 pos, Color color)
-    {
-        Debug.DrawLine(pos, pos, color);
+        else
+        {
+            graph.DrawNN(neuralNetwork, new[] { 50, 50 });
+            i = 0;
+        }
     }
 }

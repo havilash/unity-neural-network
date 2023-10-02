@@ -47,6 +47,7 @@ public class Layer
 
     public void ClearGradients()
     {
+
         Array.Clear(costGradientW, 0, costGradientW.Length);
         Array.Clear(costGradientB, 0, costGradientB.Length);
     }
@@ -71,16 +72,27 @@ public class Layer
         return activations;
     }
 
+    //double Activation(double weightedInput)
+    //{
+    //    return 1 / (1 + Math.Exp(-weightedInput));
+    //}
+
+    //double ActivationDerivative(double weightedInput)
+    //{
+    //    double activation = Activation(weightedInput);
+    //    return activation * (1 - activation);
+    //}
+
     double Activation(double weightedInput)
     {
-        return 1 / (1 + Math.Exp(-weightedInput));
+        return Math.Max(0, weightedInput);
     }
 
     double ActivationDerivative(double weightedInput)
     {
-        double activation = Activation(weightedInput);
-        return activation * (1 - activation);
+        return weightedInput > 0 ? 1 : 0;
     }
+
 
     public double NodeCost(double outputActivation, double expectedOutput)
     {

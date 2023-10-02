@@ -81,7 +81,7 @@ public class NeuralNetwork
     {
         foreach (Layer layer in layers)
         {
-
+            layer.ClearGradients();
         }
     }
 
