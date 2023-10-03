@@ -51,9 +51,9 @@ public class Graph : MonoBehaviour
                 Vector2 realPoint = LerpPoint(point, graphSize, Vector2.zero);
 
                 double[] inputs = { point.x, point.y };
-                bool output = Convert.ToBoolean(nn.Classify(inputs));
+                bool output = !Convert.ToBoolean(nn.Classify(inputs));
 
-                GameObject square = CreateSquare(realPoint, realGridSpacing, (output ? negativeColor : positiveColor ).WithAlpha(0.1f));
+                GameObject square = CreateSquare(realPoint, realGridSpacing, (output ? positiveColor : negativeColor ).WithAlpha(0.1f));
                 background.Add(square);
             }
     }

@@ -1,27 +1,46 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.UIElements;
-using UnityEngine.XR;
+using Assets.Scripts.NeuralNetwork.Activation;
+using Assets.Scripts.NeuralNetwork.Cost;
 
 public class NeuralNetwork
 {
     public Layer[] layers;
     public readonly int[] layerSizes;
 
-    Random rng;
+    public ICost cost;
 
-    public NeuralNetwork(params int[] layerSizes)
+    System.Random rng;
+
+    public NeuralNetwork(int[] layerSizes)
     {
         this.layerSizes = layerSizes;
-        rng = new Random();
+        this.cost = new Cost.MeanSquaredError();
+        rng = new System.Random();
 
         layers = new Layer[layerSizes.Length - 1];
         for (int i = 0; i < layers.Length; i++)
         {
             layers[i] = new Layer(layerSizes[i], layerSizes[i + 1]);
         }
+    }
+
+    public void SetCost(ICost costFunction)
+    {
+        this.cost = costFunction;
+    }
+
+    public void SetActivation(IActivation activation)
+    {
+        SetActivation(activation, activation);
+    }
+
+    public void SetActivation(IActivation activation, IActivation outputLayerActivation)
+    {
+        for (int i = 0; i < layers.Length - 1; i++)
+        {
+            layers[i].SetActivationFunction(activation);
+        }
+        layers[layers.Length - 1].SetActivationFunction(outputLayerActivation);
     }
 
     public double[] CalculateOutputs(double[] inputs)
@@ -42,13 +61,7 @@ public class NeuralNetwork
     double Cost(DataPoint dataPoint)
     {
         double[] outputs = CalculateOutputs(dataPoint.inputs);
-        Layer outputLayer = layers[layers.Length - 1];
-        double cost = 0;
-
-        for (int nodeOut = 0; nodeOut < outputs.Length; nodeOut++)
-        {
-            cost += outputLayer.NodeCost(outputs[nodeOut], dataPoint.expectedOutputs[nodeOut]);
-        }
+        double cost = this.cost.Function(outputs, dataPoint.expectedOutputs);
 
         return cost;
     }
@@ -98,7 +111,7 @@ public class NeuralNetwork
         CalculateOutputs(dataPoint.inputs);
 
         Layer outputLayer = layers[layers.Length - 1];
-        double[] nodeValues = outputLayer.CalculateOutputLayerNodeValues(dataPoint.expectedOutputs);
+        double[] nodeValues = outputLayer.CalculateOutputLayerNodeValues(dataPoint.expectedOutputs, cost);
         outputLayer.UpdateGradients(nodeValues);
 
         for (int hiddenLayerIndex = layers.Length - 2; hiddenLayerIndex >= 0; hiddenLayerIndex--) 

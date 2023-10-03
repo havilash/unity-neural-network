@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Transactions;
+using Assets.Scripts.NeuralNetwork.Activation;
+using Assets.Scripts.NeuralNetwork.Cost;
 using UnityEngine;
 
 public class Layer
@@ -14,6 +16,8 @@ public class Layer
     public double[,] weights;
     public double[] biases;
 
+    public IActivation activation;
+
     double[] inputs;
     double[] weightedInputs;
     double[] activations;
@@ -22,6 +26,7 @@ public class Layer
     {
         this.numNodesIn = numNodesIn;
         this.numNodesOut = numNodesOut;
+        this.activation = new Activation.ReLU();
 
         weights = new double[numNodesIn, numNodesOut];
         biases = new double[numNodesOut];
@@ -66,38 +71,14 @@ public class Layer
                 weightedInput += inputs[nodeIn] * weights[nodeIn, nodeOut];
             }
             weightedInputs[nodeOut] = weightedInput;
-            activations[nodeOut] = Activation(weightedInput);
+        }
+
+        for (int nodeOut = 0; nodeOut < numNodesOut; nodeOut++)
+        {
+            activations[nodeOut] = activation.Function(weightedInputs, nodeOut);
         }
 
         return activations;
-    }
-
-    //double Activation(double weightedInput)
-    //{
-    //    return 1 / (1 + Math.Exp(-weightedInput));
-    //}
-
-    //double ActivationDerivative(double weightedInput)
-    //{
-    //    double activation = Activation(weightedInput);
-    //    return activation * (1 - activation);
-    //}
-
-    double Activation(double weightedInput)
-    {
-        return Math.Max(0, weightedInput);
-    }
-
-    double ActivationDerivative(double weightedInput)
-    {
-        return weightedInput > 0 ? 1 : 0;
-    }
-
-
-    public double NodeCost(double outputActivation, double expectedOutput)
-    {
-        double error = Math.Pow(outputActivation - expectedOutput, 2);
-        return error;
     }
 
     public double NodeCostDerivative(double outputActivation, double expectedOutputs)
@@ -118,14 +99,14 @@ public class Layer
             }
     }
 
-    public double[] CalculateOutputLayerNodeValues(double[] expectedOutputs)
+    public double[] CalculateOutputLayerNodeValues(double[] expectedOutputs, ICost cost)
     {
         double[] nodeValues = new double[expectedOutputs.Length];
 
         for (int i = 0; i < nodeValues.Length; i++)
         {
-            double costDerivative = NodeCostDerivative(activations[i], expectedOutputs[i]);
-            double activationDerivative = ActivationDerivative(weightedInputs[i]);
+            double costDerivative = cost.Derivative(activations[i], expectedOutputs[i]);
+            double activationDerivative = activation.Derivative(weightedInputs, i);
             nodeValues[i] = activationDerivative * costDerivative;
         }
 
@@ -145,7 +126,7 @@ public class Layer
                 double weightedInputDerivative = oldLayer.weights[newNodeIndex, oldNodeIndex];
                 newNodeValue += weightedInputDerivative * oldNodeValues[oldNodeIndex];
             }
-            newNodeValue *= ActivationDerivative(weightedInputs[newNodeIndex]);
+            newNodeValue *= activation.Derivative(weightedInputs, newNodeIndex);
             newNodeValues[newNodeIndex] = newNodeValue;
         }
 
@@ -166,5 +147,10 @@ public class Layer
             double derivativeCostWrtBias = 1 * nodeValues[nodeOut];
             costGradientB[nodeOut] += derivativeCostWrtBias;
         }
+    }
+
+    internal void SetActivationFunction(IActivation activation)
+    {
+        this.activation = activation;
     }
 }
