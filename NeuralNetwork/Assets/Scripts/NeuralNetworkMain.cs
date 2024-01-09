@@ -11,6 +11,7 @@ public class NeuralNetworkMain : MonoBehaviour
     [SerializeField] private Graph graph;
 
     DataPoint[] data;
+    GraphPoint[] graphData;
 
     int i = 0;
 
@@ -18,7 +19,7 @@ public class NeuralNetworkMain : MonoBehaviour
     {
         neuralNetwork = CreateModel();
         data = LoadData("Assets\\Data\\Fruit\\Fruit_Dataset.csv");
-        GraphPoint[] graphData = ConvertToGraphPoints(data);
+        graphData = ConvertToGraphPoints(data);
         graph.Draw(graphData);
     }
 
@@ -31,16 +32,25 @@ public class NeuralNetworkMain : MonoBehaviour
         }
         else
         {
-            graph.DrawNN(neuralNetwork, new[] { 50, 50 });
+            graph.DrawNN(neuralNetwork, new[] { 50, 50 }, graphData);
             i = 0;
+
+            //foreach (var item in data)
+            //{
+            //    var inputs = String.Join(", ", neuralNetwork.CalculateOutputs(item.inputs));
+            //    var expectedOutputs = String.Join(", ", item.expectedOutputs);
+            //    print($"{inputs} | {expectedOutputs}");
+            //}
+
         }
     }
 
     NeuralNetwork CreateModel()
     {
-        NeuralNetwork nn = new NeuralNetwork(new []{2, 8, 2});
+        NeuralNetwork nn = new NeuralNetwork(new []{2, 5, 2});
         nn.SetCost(new Cost.MeanSquaredError());
         nn.SetActivation(new Activation.ReLU());
+        nn.layers[^1].SetActivation(new Activation.Softmax());
         return nn;
     }
 

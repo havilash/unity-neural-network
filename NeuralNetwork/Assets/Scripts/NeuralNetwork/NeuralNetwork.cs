@@ -38,9 +38,9 @@ public class NeuralNetwork
     {
         for (int i = 0; i < layers.Length - 1; i++)
         {
-            layers[i].SetActivationFunction(activation);
+            layers[i].SetActivation(activation);
         }
-        layers[layers.Length - 1].SetActivationFunction(outputLayerActivation);
+        layers[^1].SetActivation(outputLayerActivation);
     }
 
     public double[] CalculateOutputs(double[] inputs)

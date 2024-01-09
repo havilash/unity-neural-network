@@ -149,7 +149,7 @@ public class Layer
         }
     }
 
-    internal void SetActivationFunction(IActivation activation)
+    internal void SetActivation(IActivation activation)
     {
         this.activation = activation;
     }
